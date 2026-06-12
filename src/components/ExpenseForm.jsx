@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { CATEGORIES } from "../utils/initialData";
-import { PlusCircle, Calendar, IndianRupee, Tag, FileText } from "lucide-react";
+import { PlusCircle, Calendar, IndianRupee, FileText } from "lucide-react";
 
 export default function ExpenseForm({ onAddExpense }) {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [category, setCategory] = useState("Food");
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
@@ -33,13 +31,11 @@ export default function ExpenseForm({ onAddExpense }) {
       id: `exp-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
       amount: parsedAmount,
       description: description.trim(),
-      date,
-      category
+      date
     };
 
     onAddExpense(newExpense);
 
-    // Reset fields except date and category for faster double entries
     setAmount("");
     setDescription("");
   };
@@ -95,7 +91,7 @@ export default function ExpenseForm({ onAddExpense }) {
         </div>
 
         {/* Description Input */}
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom: "24px" }}>
           <label className="form-label">
             <FileText size={13} style={{ marginRight: "4px", verticalAlign: "middle" }} />
             Description
@@ -103,7 +99,7 @@ export default function ExpenseForm({ onAddExpense }) {
           <input
             type="text"
             className="form-input"
-            placeholder="e.g. Weekly Groceries"
+            placeholder="e.g. Rent payment or gas"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
@@ -111,7 +107,7 @@ export default function ExpenseForm({ onAddExpense }) {
         </div>
 
         {/* Date Input */}
-        <div className="form-group">
+        <div className="form-group" style={{ marginBottom: "24px" }}>
           <label className="form-label">
             <Calendar size={13} style={{ marginRight: "4px", verticalAlign: "middle" }} />
             Date
@@ -123,26 +119,6 @@ export default function ExpenseForm({ onAddExpense }) {
             onChange={(e) => setDate(e.target.value)}
             required
           />
-        </div>
-
-        {/* Category Picker */}
-        <div className="form-group" style={{ marginBottom: "24px" }}>
-          <label className="form-label">
-            <Tag size={13} style={{ marginRight: "4px", verticalAlign: "middle" }} />
-            Category
-          </label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                className={`category-btn ${category === cat ? "active" : ""}`}
-                onClick={() => setCategory(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Submit button */}

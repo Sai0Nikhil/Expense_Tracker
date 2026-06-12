@@ -106,7 +106,6 @@ export default function BulkImport({ onImportExpenses, apiKey }) {
 - date (in YYYY-MM-DD format)
 - description (merchant or clean description name)
 - amount (positive float number)
-- category (Choose one of: Housing, Food, Transport, Utilities, Entertainment, Shopping, Health, Other)
 
 Do not return any other text, conversational intro/outro, or markdown blocks except the raw JSON array.
 Statement Text:
@@ -336,12 +335,12 @@ ${extractedPdfText.substring(0, 12000)} // truncate if too long to save token li
                   <div style={{ fontWeight: "500", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {exp.description}
                   </div>
-                  <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
-                    {exp.date} • {exp.category}
+                   <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                    {exp.date}
                   </div>
                 </div>
                 <div style={{ fontWeight: "600", color: "var(--color-indigo)" }}>
-                  ${exp.amount.toFixed(2)}
+                  ₹{exp.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
               </div>
             ))}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { initialExpenses } from "./utils/initialData";
+import { initialExpenses, FINANCE_QUOTES } from "./utils/initialData";
 import ExpenseForm from "./components/ExpenseForm";
 import ExpenseList from "./components/ExpenseList";
-import { TrendChart, CategoryDonut } from "./components/Charts";
+import { TrendChart } from "./components/Charts";
 import BulkImport from "./components/BulkImport";
 import AIReceiptScanner from "./components/AIAdvisor";
 import SmartInsights from "./components/SmartInsights";
@@ -12,7 +12,6 @@ import {
   IndianRupee, 
   Calendar, 
   Activity, 
-  PieChart, 
   Sparkles,
   LayoutDashboard,
   Settings,
@@ -20,6 +19,29 @@ import {
 } from "lucide-react";
 
 export default function App() {
+  // Landing Welcome state
+  const [hasStarted, setHasStarted] = useState(() => {
+    const saved = localStorage.getItem("has_started");
+    return saved === "true";
+  });
+
+  const handleGetStarted = () => {
+    setHasStarted(true);
+    localStorage.setItem("has_started", "true");
+  };
+
+  // Rotating Finance Quote State
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentQuoteIndex((prev) => (prev + 1) % FINANCE_QUOTES.length);
+    }, 12000); // rotates every 12 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeQuote = FINANCE_QUOTES[currentQuoteIndex];
+
   // Load expenses from localStorage or fall back to empty array
   const [expenses, setExpenses] = useState(() => {
     const saved = localStorage.getItem("expenses");
@@ -92,34 +114,17 @@ export default function App() {
     const daysInCurrentMonthPassed = now.getDate();
     const dailyAverage = daysInCurrentMonthPassed > 0 ? curMonthSpent / daysInCurrentMonthPassed : 0;
 
-    const categoryTotals = expenses.reduce((acc, curr) => {
-      acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
-      return acc;
-    }, {});
-    
-    let highestCategory = "None";
-    let highestAmount = 0;
-    Object.keys(categoryTotals).forEach(cat => {
-      if (categoryTotals[cat] > highestAmount) {
-        highestAmount = categoryTotals[cat];
-        highestCategory = cat;
-      }
-    });
-
     let healthScore = 100;
-    const totalSpentAllTime = expenses.reduce((sum, e) => sum + e.amount, 0);
-    if (totalSpentAllTime > 0) {
-      const foodTotal = categoryTotals["Food"] || 0;
-      const shoppingTotal = categoryTotals["Shopping"] || 0;
-      const entertainmentTotal = categoryTotals["Entertainment"] || 0;
-      
-      const luxuryRatio = (foodTotal + shoppingTotal + entertainmentTotal) / totalSpentAllTime;
-      
-      if (luxuryRatio > 0.5) healthScore -= 25;
-      else if (luxuryRatio > 0.35) healthScore -= 12;
+    if (curMonthSpent > 0) {
+      if (dailyAverage > 2000) healthScore -= 30;
+      else if (dailyAverage > 1000) healthScore -= 15;
+      else if (dailyAverage > 500) healthScore -= 5;
 
-      if (curMonthSpent > 3000) healthScore -= 15;
-      else if (curMonthSpent > 1500) healthScore -= 8;
+      if (prevMonthSpent > 0 && curMonthSpent > prevMonthSpent) {
+        const ratio = curMonthSpent / prevMonthSpent;
+        if (ratio > 1.5) healthScore -= 20;
+        else if (ratio > 1.2) healthScore -= 10;
+      }
     }
     healthScore = Math.max(healthScore, 35); 
 
@@ -129,13 +134,100 @@ export default function App() {
       diffPercent,
       isUp,
       dailyAverage,
-      highestCategory,
       healthScore
     };
   };
 
   const kpis = getKpis();
 
+  // Landing Welcome View
+  if (!hasStarted) {
+    return (
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        alignItems: "center",
+        minHeight: "100vh",
+        background: "var(--bg-main)",
+        padding: "64px 24px",
+        textAlign: "center",
+        backgroundImage: `
+          radial-gradient(circle at 10% 20%, rgba(223, 122, 94, 0.04) 0%, transparent 40%),
+          radial-gradient(circle at 90% 80%, rgba(204, 167, 162, 0.05) 0%, transparent 45%)
+        `
+      }}>
+        {/* Header Logo & Title */}
+        <div style={{ marginTop: "40px" }}>
+          <div style={{ 
+            width: "56px", 
+            height: "56px", 
+            borderRadius: "16px", 
+            background: "linear-gradient(135deg, var(--color-indigo), var(--color-rose))",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "var(--shadow-glow)",
+            margin: "0 auto 24px auto"
+          }}>
+            <Sparkles size={28} style={{ color: "white" }} />
+          </div>
+          <h1 style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
+            Obsidian Pay
+          </h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "8px", maxWidth: "340px", marginLeft: "auto", marginRight: "auto" }}>
+            A premium personal expense command center with offline budget insights and AI receipt scanning.
+          </p>
+        </div>
+
+        {/* Dynamic Quote (Always visible) */}
+        <div className="glass-card animate-fade-in" style={{ 
+          maxWidth: "460px", 
+          padding: "24px 32px", 
+          borderStyle: "solid",
+          background: "var(--bg-surface)",
+          boxShadow: "var(--shadow-md)",
+          borderRadius: "20px"
+        }}>
+          <p style={{ 
+            fontSize: "15px", 
+            fontWeight: "500", 
+            fontStyle: "italic", 
+            color: "var(--text-primary)", 
+            lineHeight: "1.6" 
+          }}>
+            "{activeQuote.text}"
+          </p>
+          <p style={{ 
+            fontSize: "12px", 
+            fontWeight: "700", 
+            color: "var(--color-indigo)", 
+            marginTop: "12px",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em"
+          }}>
+            — {activeQuote.author}
+          </p>
+        </div>
+
+        {/* Footer with Get Started Button */}
+        <div style={{ width: "100%", maxWidth: "320px", marginBottom: "30px" }}>
+          <button 
+            className="btn btn-primary" 
+            style={{ width: "100%", padding: "14px", fontSize: "15px", borderRadius: "14px", fontWeight: "700" }}
+            onClick={handleGetStarted}
+          >
+            Get Started
+          </button>
+          <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "12px" }}>
+            No accounts or setup required. All data remains saved locally in your browser.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard View
   return (
     <div className="app-container">
       {/* Sidebar Navigation */}
@@ -183,10 +275,29 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Footer info */}
-        <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px", fontSize: "12px", color: "var(--text-muted)" }}>
-          <p>Local Storage Active</p>
-          <p style={{ marginTop: "4px" }}>Build v1.3.0 (Gemini 3.5)</p>
+        {/* Dynamic rotating finance quote (visible always) */}
+        <div style={{ 
+          borderTop: "1px solid var(--border-color)", 
+          paddingTop: "20px", 
+          fontSize: "11px", 
+          color: "var(--text-muted)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px"
+        }}>
+          <div style={{ fontStyle: "italic", lineHeight: "1.4", color: "var(--text-secondary)" }} className="animate-fade-in">
+            "{activeQuote.text}"
+            <div style={{ fontWeight: "700", fontSize: "9px", textTransform: "uppercase", marginTop: "4px", color: "var(--color-indigo)" }}>
+              — {activeQuote.author}
+            </div>
+          </div>
+          <div style={{ fontSize: "10px", marginTop: "4px", display: "flex", justifyContent: "space-between" }}>
+            <span>Build v1.4.0</span>
+            <span style={{ cursor: "pointer", color: "var(--color-rose)", fontWeight: "600" }} onClick={() => {
+              setHasStarted(false);
+              localStorage.setItem("has_started", "false");
+            }}>Exit</span>
+          </div>
         </div>
       </aside>
 
@@ -203,7 +314,7 @@ export default function App() {
             </h1>
           </div>
           <div style={{ color: "var(--text-secondary)", fontSize: "14px", fontFamily: "var(--font-heading)", fontWeight: "500" }}>
-            {new Date().toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {new Date().toLocaleDateString("en-IN", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </div>
         </div>
 
@@ -263,7 +374,7 @@ export default function App() {
         {/* KPI Metrics Grid */}
         <div className="grid-layout">
           {/* Card 1: Total Spent */}
-          <div className="glass-card col-span-3 metric-card">
+          <div className="glass-card col-span-4 metric-card">
             <div className="metric-header">
               <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>MONTH TO DATE</span>
               <div className="metric-icon" style={{ background: "rgba(223, 122, 94, 0.08)", color: "var(--color-indigo)" }}>
@@ -290,7 +401,7 @@ export default function App() {
           </div>
 
           {/* Card 2: Daily Average */}
-          <div className="glass-card col-span-3 metric-card">
+          <div className="glass-card col-span-4 metric-card">
             <div className="metric-header">
               <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>DAILY AVERAGE</span>
               <div className="metric-icon" style={{ background: "rgba(204, 167, 162, 0.1)", color: "var(--color-violet)" }}>
@@ -307,26 +418,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Card 3: Top Category */}
-          <div className="glass-card col-span-3 metric-card">
-            <div className="metric-header">
-              <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>TOP CATEGORY</span>
-              <div className="metric-icon" style={{ background: "rgba(232, 169, 124, 0.1)", color: "var(--color-amber)" }}>
-                <PieChart size={20} />
-              </div>
-            </div>
-            <div>
-              <h2 style={{ fontSize: "28px", fontWeight: "700", letterSpacing: "-0.03em", color: "var(--text-primary)" }}>
-                {kpis.highestCategory}
-              </h2>
-              <p style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "8px" }}>
-                Consumes most budget alloc.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 4: Health Score */}
-          <div className="glass-card col-span-3 metric-card">
+          {/* Card 3: Health Score */}
+          <div className="glass-card col-span-4 metric-card">
             <div className="metric-header">
               <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>HEALTH SCORE</span>
               <div className="metric-icon" style={{ 
@@ -355,7 +448,6 @@ export default function App() {
         {/* Charts & Offline Insights Row */}
         <div className="grid-layout">
           <TrendChart expenses={expenses} />
-          <CategoryDonut expenses={expenses} />
           <SmartInsights expenses={expenses} />
         </div>
 

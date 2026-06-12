@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { CATEGORY_COLORS_HEX, CATEGORIES } from "../utils/initialData";
 
 export function TrendChart({ expenses }) {
   const [hoveredPoint, setHoveredPoint] = useState(null);
@@ -42,7 +41,7 @@ export function TrendChart({ expenses }) {
   }
 
   return (
-    <div className="glass-card col-span-6">
+    <div className="glass-card col-span-8">
       <h3 className="form-label" style={{ fontSize: "16px", marginBottom: "4px", fontWeight: "600", color: "var(--text-primary)" }}>
         Spending Trend
       </h3>
@@ -161,127 +160,6 @@ export function TrendChart({ expenses }) {
               <span style={{ fontWeight: "600", color: "var(--color-indigo)" }}>₹{chartPoints[hoveredPoint].amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
             </div>
           )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function CategoryDonut({ expenses }) {
-  const [activeCategory, setActiveCategory] = useState(null);
-
-  // Group by category
-  const categoryTotals = expenses.reduce((acc, curr) => {
-    acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
-    return acc;
-  }, {});
-
-  const totalSpent = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
-
-  // Prepare data for Donut Chart
-  const donutData = Object.keys(categoryTotals).map(cat => ({
-    category: cat,
-    amount: categoryTotals[cat],
-    percentage: totalSpent > 0 ? (categoryTotals[cat] / totalSpent) * 100 : 0,
-    color: CATEGORY_COLORS_HEX[cat] || "#64748b"
-  })).sort((a, b) => b.amount - a.amount);
-
-  const radius = 50;
-  const circumference = 2 * Math.PI * radius; // ~314.16
-  let accumulatedOffset = 0;
-
-  return (
-    <div className="glass-card col-span-3">
-      <h3 className="form-label" style={{ fontSize: "16px", marginBottom: "4px", fontWeight: "600", color: "var(--text-primary)" }}>
-        Categories
-      </h3>
-      <p className="form-label" style={{ fontSize: "12px", marginBottom: "16px" }}>
-        Breakdown of expenses
-      </p>
-
-      {totalSpent === 0 ? (
-        <div style={{ height: "160px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "14px" }}>
-          No data.
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-          {/* SVG Donut */}
-          <div style={{ position: "relative", width: "100px", height: "100px", flexShrink: 0 }}>
-            <svg viewBox="0 0 120 120" width="100%" height="100%">
-              <circle cx="60" cy="60" r={radius} fill="none" stroke="rgba(0,0,0,0.02)" strokeWidth="12" />
-              
-              {donutData.map((slice, idx) => {
-                const strokeLength = (slice.amount / totalSpent) * circumference;
-                const strokeOffset = circumference - accumulatedOffset;
-                accumulatedOffset += strokeLength;
-
-                return (
-                  <circle
-                    key={idx}
-                    cx="60"
-                    cy="60"
-                    r={radius}
-                    fill="none"
-                    stroke={slice.color}
-                    strokeWidth={activeCategory === idx ? "15" : "12"}
-                    strokeDasharray={`${strokeLength} ${circumference - strokeLength}`}
-                    strokeDashoffset={strokeOffset}
-                    transform="rotate(-90 60 60)"
-                    style={{ 
-                      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)", 
-                      cursor: "pointer" 
-                    }}
-                    onMouseEnter={() => setActiveCategory(idx)}
-                    onMouseLeave={() => setActiveCategory(null)}
-                  />
-                );
-              })}
-            </svg>
-
-            {/* Text in the center */}
-            <div style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              pointerEvents: "none"
-            }}>
-              <div style={{ fontSize: "8px", textTransform: "uppercase", color: "var(--text-muted)", fontFamily: "var(--font-heading)", fontWeight: "700" }}>
-                {activeCategory !== null ? donutData[activeCategory].category : "Total"}
-              </div>
-              <div style={{ fontSize: "13px", fontWeight: "700", fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}>
-                ₹{(activeCategory !== null ? donutData[activeCategory].amount : totalSpent).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-              </div>
-            </div>
-          </div>
-
-          {/* Legend - small & compact */}
-          <div style={{ width: "100%", maxHeight: "80px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px" }}>
-            {donutData.slice(0, 4).map((slice, idx) => (
-              <div 
-                key={idx} 
-                style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "space-between",
-                  fontSize: "10px",
-                  cursor: "pointer",
-                  padding: "1px 2px",
-                  borderRadius: "4px",
-                  background: activeCategory === idx ? "var(--bg-surface-elevated)" : "transparent"
-                }}
-                onMouseEnter={() => setActiveCategory(idx)}
-                onMouseLeave={() => setActiveCategory(null)}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", minWidth: 0 }}>
-                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: slice.color, flexShrink: 0 }}></span>
-                  <span style={{ color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{slice.category}</span>
-                </div>
-                <span style={{ color: "var(--text-primary)", fontWeight: "600" }}>{slice.percentage.toFixed(0)}%</span>
-              </div>
-            ))}
-          </div>
         </div>
       )}
     </div>
