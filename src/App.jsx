@@ -59,7 +59,6 @@ export default function App() {
   });
 
   const [tempKey, setTempKey] = useState(apiKey);
-  const [showKey, setShowKey] = useState(false);
   const [keySavedMessage, setKeySavedMessage] = useState(false);
 
   const handleSaveKey = (e) => {
@@ -275,6 +274,42 @@ export default function App() {
           </div>
         </nav>
 
+        {/* Compact API Key Input in Sidebar */}
+        <div style={{ 
+          borderTop: "1px solid var(--border-color)", 
+          paddingTop: "20px", 
+          paddingBottom: "10px"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+            <ShieldCheck size={14} style={{ color: "var(--color-indigo)" }} />
+            <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-primary)" }}>
+              Claude AI Assistant
+            </span>
+            <span className="indicator-pulse" style={{ 
+              width: "6px", 
+              height: "6px", 
+              borderRadius: "50%", 
+              background: apiKey ? "var(--color-emerald)" : "var(--color-rose)"
+            }}></span>
+          </div>
+          <form onSubmit={handleSaveKey} style={{ display: "flex", gap: "6px" }}>
+            <input
+              type="password"
+              className="form-input"
+              style={{ height: "30px", fontSize: "11px", padding: "4px 8px", flex: 1 }}
+              placeholder="Paste sk-ant-..."
+              value={tempKey}
+              onChange={(e) => setTempKey(e.target.value)}
+            />
+            <button type="submit" className="btn btn-primary" style={{ padding: "0 10px", height: "30px", fontSize: "11px" }}>
+              Save
+            </button>
+          </form>
+          {keySavedMessage && (
+            <div className="animate-fade-in" style={{ fontSize: "10px", color: "var(--color-emerald)", fontWeight: "700", marginTop: "4px" }}>✓ Saved!</div>
+          )}
+        </div>
+
         {/* Dynamic rotating finance quote (visible always) */}
         <div style={{ 
           borderTop: "1px solid var(--border-color)", 
@@ -318,61 +353,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Top Prominent API Configuration Bar */}
-        <div className="header-config-bar">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <ShieldCheck size={18} style={{ color: "var(--color-indigo)" }} />
-            <span style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-primary)" }}>
-              Claude AI Assistant Setup:
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span className="indicator-pulse" style={{ color: apiKey ? "var(--color-emerald)" : "var(--color-rose)" }}></span>
-              <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700" }}>
-                {apiKey ? "Active (Connected)" : "Offline (Key Required)"}
-              </span>
-            </div>
-          </div>
-          
-          <form onSubmit={handleSaveKey} style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, maxWidth: "550px" }}>
-            <div style={{ position: "relative", flex: 1 }}>
-              <input
-                type={showKey ? "text" : "password"}
-                className="form-input"
-                style={{ paddingRight: "46px", paddingLeft: "12px", height: "36px", fontSize: "12px" }}
-                placeholder="Paste Anthropic API Key here (sk-ant-...)"
-                value={tempKey}
-                onChange={(e) => setTempKey(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowKey(!showKey)}
-                style={{
-                  position: "absolute",
-                  right: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "var(--text-muted)",
-                  fontSize: "11px",
-                  fontWeight: "600"
-                }}
-              >
-                {showKey ? "Hide" : "Show"}
-              </button>
-            </div>
-            <button type="submit" className="btn btn-primary" style={{ padding: "0 16px", height: "36px", fontSize: "12px" }}>
-              Save
-            </button>
-          </form>
-          {keySavedMessage && (
-            <span className="animate-fade-in" style={{ fontSize: "12px", color: "var(--color-emerald)", fontWeight: "700" }}>✓ Saved!</span>
-          )}
-        </div>
-
         {/* KPI Metrics Grid */}
-        <div className="grid-layout">
+        <div className="grid-layout" style={{ marginTop: "24px" }}>
           {/* Card 1: Total Spent */}
           <div className="glass-card col-span-4 metric-card">
             <div className="metric-header">
