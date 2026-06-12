@@ -149,6 +149,7 @@ export const CATEGORY_COLORS_HEX = {
 };
 
 export const FINANCE_QUOTES = [
+  // Finance Command Quotes
   { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
   { text: "Rule No. 1: Never lose money. Rule No. 2: Never forget rule No. 1.", author: "Warren Buffett" },
   { text: "Beware of little expenses; a small leak will sink a great ship.", author: "Benjamin Franklin" },
@@ -156,5 +157,43 @@ export const FINANCE_QUOTES = [
   { text: "Money is a terrible master but an excellent servant.", author: "P.T. Barnum" },
   { text: "It’s not how much money you make, but how much money you keep.", author: "Robert Kiyosaki" },
   { text: "The safe way to double your money is to fold it over once and put it in your pocket.", author: "Kin Hubbard" },
-  { text: "Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness.", author: "Charles Dickens" }
+  { text: "Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness.", author: "Charles Dickens" },
+  { text: "Wealth consists not in having great possessions, but in having few wants.", author: "Epictetus" },
+
+  // Habit & Motivation Quotes
+  { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
+  { text: "Motivation is what gets you started. Habit is what keeps you going.", author: "Jim Ryun" },
+  { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
+  { text: "First we make our habits, then our habits make us.", author: "John Dryden" },
+  { text: "Successful people are simply those with successful habits.", author: "Brian Tracy" },
+  { text: "Your habits will determine your future.", author: "Jack Canfield" },
+  { text: "If you believe you can change - if you make it a habit - the change becomes real.", author: "Charles Duhigg" },
+  { text: "It is easier to prevent bad habits than to break them.", author: "Benjamin Franklin" }
+];
+
+export const initialHabits = [
+  {
+    id: "habit-1",
+    name: "Drink 3L Water",
+    createdAt: "2026-06-01",
+    history: ["2026-06-10", "2026-06-11", "2026-06-12"]
+  },
+  {
+    id: "habit-2",
+    name: "Morning Gym Workout",
+    createdAt: "2026-06-01",
+    history: ["2026-06-11"]
+  },
+  {
+    id: "habit-3",
+    name: "Read 10 Pages",
+    createdAt: "2026-06-01",
+    history: ["2026-06-10", "2026-06-12"]
+  },
+  {
+    id: "habit-4",
+    name: "Meditation 10 Mins",
+    createdAt: "2026-06-02",
+    history: []
+  }
 ];

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { initialExpenses, FINANCE_QUOTES } from "./utils/initialData";
+import { initialExpenses, initialHabits, FINANCE_QUOTES } from "./utils/initialData";
 import ExpenseForm from "./components/ExpenseForm";
 import ExpenseList from "./components/ExpenseList";
 import { TrendChart, CategoryDonut } from "./components/Charts";
 import BulkImport from "./components/BulkImport";
 import AIReceiptScanner from "./components/AIAdvisor";
 import SmartInsights from "./components/SmartInsights";
+import HabitTracker from "./components/HabitTracker";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -16,20 +17,29 @@ import {
   Sparkles,
   LayoutDashboard,
   Settings,
-  ShieldCheck
+  ShieldCheck,
+  Check
 } from "lucide-react";
 
 export default function App() {
-  // Landing Welcome state
-  const [hasStarted, setHasStarted] = useState(() => {
-    const saved = localStorage.getItem("has_started");
-    return saved === "true";
+  // Navigation: activeApp can be 'landing', 'expenses', 'habits'
+  const [activeApp, setActiveApp] = useState(() => {
+    return localStorage.getItem("active_app") || "landing";
   });
 
-  const handleGetStarted = () => {
-    setHasStarted(true);
-    localStorage.setItem("has_started", "true");
-  };
+  useEffect(() => {
+    localStorage.setItem("active_app", activeApp);
+  }, [activeApp]);
+
+  // Load habits from localStorage or fall back to empty array
+  const [habits, setHabits] = useState(() => {
+    const saved = localStorage.getItem("habits");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("habits", JSON.stringify(habits));
+  }, [habits]);
 
   // Rotating Finance Quote State
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
@@ -158,8 +168,8 @@ export default function App() {
 
   const kpis = getKpis();
 
-  // Landing Welcome View
-  if (!hasStarted) {
+  // Landing Workspace Selector View
+  if (activeApp === "landing") {
     return (
       <div style={{
         display: "flex",
@@ -191,57 +201,150 @@ export default function App() {
             <Sparkles size={28} style={{ color: "white" }} />
           </div>
           <h1 style={{ fontSize: "36px", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.03em" }}>
-            Obsidian Pay
+            Obsidian Command Center
           </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "8px", maxWidth: "340px", marginLeft: "auto", marginRight: "auto" }}>
-            A premium personal expense command center with offline budget insights and AI receipt scanning.
+          <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "8px", maxWidth: "400px", marginLeft: "auto", marginRight: "auto" }}>
+            Select a workspace application to get started. All data is saved offline in your browser.
           </p>
+        </div>
+
+        {/* Workspace Cards Selector */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "24px",
+          width: "100%",
+          maxWidth: "700px",
+          margin: "40px 0"
+        }}>
+          {/* Card A: Expense Tracker */}
+          <div 
+            className="glass-card clickable-card" 
+            onClick={() => setActiveApp("expenses")}
+            style={{
+              padding: "32px 24px",
+              cursor: "pointer",
+              borderRadius: "20px",
+              background: "var(--bg-surface)",
+              boxShadow: "var(--shadow-md)",
+              border: "1px solid var(--border-color)",
+              transition: "transform 0.2s, box-shadow 0.2s",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "16px"
+            }}
+          >
+            <div style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              background: "rgba(223, 122, 94, 0.08)",
+              color: "var(--color-indigo)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <IndianRupee size={24} />
+            </div>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", margin: 0, color: "var(--text-primary)" }}>
+              Obsidian Pay
+            </h3>
+            <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
+              Track personal expenses, upload CSVs/PDF bank statements, and parse receipt images with Claude AI.
+            </p>
+            <button className="btn btn-primary" style={{ marginTop: "12px", padding: "8px 20px", fontSize: "12px" }}>
+              Launch Pay
+            </button>
+          </div>
+
+          {/* Card B: Habit Tracker */}
+          <div 
+            className="glass-card clickable-card" 
+            onClick={() => setActiveApp("habits")}
+            style={{
+              padding: "32px 24px",
+              cursor: "pointer",
+              borderRadius: "20px",
+              background: "var(--bg-surface)",
+              boxShadow: "var(--shadow-md)",
+              border: "1px solid var(--border-color)",
+              transition: "transform 0.2s, box-shadow 0.2s",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "16px"
+            }}
+          >
+            <div style={{
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
+              background: "rgba(16, 185, 129, 0.08)",
+              color: "var(--color-emerald)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <Check size={24} />
+            </div>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", margin: 0, color: "var(--text-primary)" }}>
+              Obsidian Habits
+            </h3>
+            <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
+              Build and track daily habits, mark completions, maintain streaks, and score your performance offline.
+            </p>
+            <button className="btn btn-primary" style={{ marginTop: "12px", padding: "8px 20px", fontSize: "12px", background: "var(--color-emerald)", borderColor: "var(--color-emerald)" }}>
+              Launch Habits
+            </button>
+          </div>
         </div>
 
         {/* Dynamic Quote (Always visible) */}
         <div className="glass-card animate-fade-in" style={{ 
           maxWidth: "460px", 
-          padding: "24px 32px", 
+          padding: "20px 24px", 
           borderStyle: "solid",
           background: "var(--bg-surface)",
           boxShadow: "var(--shadow-md)",
-          borderRadius: "20px"
+          borderRadius: "20px",
+          marginBottom: "20px"
         }}>
           <p style={{ 
-            fontSize: "15px", 
+            fontSize: "13px", 
             fontWeight: "500", 
             fontStyle: "italic", 
             color: "var(--text-primary)", 
-            lineHeight: "1.6" 
+            lineHeight: "1.5",
+            margin: 0
           }}>
             "{activeQuote.text}"
           </p>
           <p style={{ 
-            fontSize: "12px", 
+            fontSize: "11px", 
             fontWeight: "700", 
             color: "var(--color-indigo)", 
-            marginTop: "12px",
+            marginTop: "8px",
             textTransform: "uppercase",
-            letterSpacing: "0.05em"
+            letterSpacing: "0.05em",
+            margin: "8px 0 0 0"
           }}>
             — {activeQuote.author}
           </p>
         </div>
-
-        {/* Footer with Get Started Button */}
-        <div style={{ width: "100%", maxWidth: "320px", marginBottom: "30px" }}>
-          <button 
-            className="btn btn-primary" 
-            style={{ width: "100%", padding: "14px", fontSize: "15px", borderRadius: "14px", fontWeight: "700" }}
-            onClick={handleGetStarted}
-          >
-            Get Started
-          </button>
-          <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "12px" }}>
-            No accounts or setup required. All data remains saved locally in your browser.
-          </p>
-        </div>
       </div>
+    );
+  }
+
+  // Habits Workspace View
+  if (activeApp === "habits") {
+    return (
+      <HabitTracker 
+        habits={habits}
+        setHabits={setHabits}
+        onSwitchApp={() => setActiveApp("landing")}
+        activeQuote={activeQuote}
+      />
     );
   }
 
@@ -347,10 +450,7 @@ export default function App() {
           </div>
           <div style={{ fontSize: "10px", marginTop: "4px", display: "flex", justifyContent: "space-between" }}>
             <span>Build v1.4.0</span>
-            <span style={{ cursor: "pointer", color: "var(--color-rose)", fontWeight: "600" }} onClick={() => {
-              setHasStarted(false);
-              localStorage.setItem("has_started", "false");
-            }}>Exit</span>
+            <span style={{ cursor: "pointer", color: "var(--color-rose)", fontWeight: "600" }} onClick={() => setActiveApp("landing")}>Switch App</span>
           </div>
         </div>
       </aside>
