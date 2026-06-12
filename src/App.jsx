@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { initialExpenses, FINANCE_QUOTES } from "./utils/initialData";
 import ExpenseForm from "./components/ExpenseForm";
 import ExpenseList from "./components/ExpenseList";
-import { TrendChart } from "./components/Charts";
+import { TrendChart, CategoryDonut } from "./components/Charts";
 import BulkImport from "./components/BulkImport";
 import AIReceiptScanner from "./components/AIAdvisor";
 import SmartInsights from "./components/SmartInsights";
@@ -12,6 +12,7 @@ import {
   IndianRupee, 
   Calendar, 
   Activity, 
+  PieChart, 
   Sparkles,
   LayoutDashboard,
   Settings,
@@ -113,17 +114,34 @@ export default function App() {
     const daysInCurrentMonthPassed = now.getDate();
     const dailyAverage = daysInCurrentMonthPassed > 0 ? curMonthSpent / daysInCurrentMonthPassed : 0;
 
-    let healthScore = 100;
-    if (curMonthSpent > 0) {
-      if (dailyAverage > 2000) healthScore -= 30;
-      else if (dailyAverage > 1000) healthScore -= 15;
-      else if (dailyAverage > 500) healthScore -= 5;
-
-      if (prevMonthSpent > 0 && curMonthSpent > prevMonthSpent) {
-        const ratio = curMonthSpent / prevMonthSpent;
-        if (ratio > 1.5) healthScore -= 20;
-        else if (ratio > 1.2) healthScore -= 10;
+    const categoryTotals = expenses.reduce((acc, curr) => {
+      acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
+      return acc;
+    }, {});
+    
+    let highestCategory = "None";
+    let highestAmount = 0;
+    Object.keys(categoryTotals).forEach(cat => {
+      if (categoryTotals[cat] > highestAmount) {
+        highestAmount = categoryTotals[cat];
+        highestCategory = cat;
       }
+    });
+
+    let healthScore = 100;
+    const totalSpentAllTime = expenses.reduce((sum, e) => sum + e.amount, 0);
+    if (totalSpentAllTime > 0) {
+      const foodTotal = categoryTotals["Food"] || 0;
+      const shoppingTotal = categoryTotals["Shopping"] || 0;
+      const entertainmentTotal = categoryTotals["Entertainment"] || 0;
+      
+      const luxuryRatio = (foodTotal + shoppingTotal + entertainmentTotal) / totalSpentAllTime;
+      
+      if (luxuryRatio > 0.5) healthScore -= 25;
+      else if (luxuryRatio > 0.35) healthScore -= 12;
+
+      if (curMonthSpent > 3000) healthScore -= 15;
+      else if (curMonthSpent > 1500) healthScore -= 8;
     }
     healthScore = Math.max(healthScore, 35); 
 
@@ -133,6 +151,7 @@ export default function App() {
       diffPercent,
       isUp,
       dailyAverage,
+      highestCategory,
       healthScore
     };
   };
@@ -356,7 +375,7 @@ export default function App() {
         {/* KPI Metrics Grid */}
         <div className="grid-layout" style={{ marginTop: "24px" }}>
           {/* Card 1: Total Spent */}
-          <div className="glass-card col-span-4 metric-card">
+          <div className="glass-card col-span-3 metric-card">
             <div className="metric-header">
               <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>MONTH TO DATE</span>
               <div className="metric-icon" style={{ background: "rgba(223, 122, 94, 0.08)", color: "var(--color-indigo)" }}>
@@ -383,7 +402,7 @@ export default function App() {
           </div>
 
           {/* Card 2: Daily Average */}
-          <div className="glass-card col-span-4 metric-card">
+          <div className="glass-card col-span-3 metric-card">
             <div className="metric-header">
               <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>DAILY AVERAGE</span>
               <div className="metric-icon" style={{ background: "rgba(204, 167, 162, 0.1)", color: "var(--color-violet)" }}>
@@ -400,8 +419,26 @@ export default function App() {
             </div>
           </div>
 
-          {/* Card 3: Health Score */}
-          <div className="glass-card col-span-4 metric-card">
+          {/* Card 3: Top Category */}
+          <div className="glass-card col-span-3 metric-card">
+            <div className="metric-header">
+              <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>TOP CATEGORY</span>
+              <div className="metric-icon" style={{ background: "rgba(232, 169, 124, 0.1)", color: "var(--color-amber)" }}>
+                <PieChart size={20} />
+              </div>
+            </div>
+            <div>
+              <h2 style={{ fontSize: "28px", fontWeight: "700", letterSpacing: "-0.03em", color: "var(--text-primary)" }}>
+                {kpis.highestCategory}
+              </h2>
+              <p style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "8px" }}>
+                Consumes most budget alloc.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 4: Health Score */}
+          <div className="glass-card col-span-3 metric-card">
             <div className="metric-header">
               <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "700", letterSpacing: "0.05em" }}>HEALTH SCORE</span>
               <div className="metric-icon" style={{ 
@@ -430,6 +467,7 @@ export default function App() {
         {/* Charts & Offline Insights Row */}
         <div className="grid-layout">
           <TrendChart expenses={expenses} />
+          <CategoryDonut expenses={expenses} />
           <SmartInsights expenses={expenses} />
         </div>
 

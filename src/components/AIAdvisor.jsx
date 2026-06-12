@@ -85,8 +85,9 @@ export default function AIReceiptScanner({ onAddExpense, apiKey }) {
 1. The transaction Date in YYYY-MM-DD format (look for date of purchase. If year is missing or unclear, default to 2026. If no date found, return current date).
 2. Clean Description (merchant/store name, e.g. "Target", "Starbucks").
 3. Amount (Total spent amount, positive float).
+4. Category (Must choose ONE of: Housing, Food, Transport, Utilities, Entertainment, Shopping, Health, Other).
 
-Return ONLY a valid JSON object with keys: "date", "description", "amount". No other text.`
+Return ONLY a valid JSON object with keys: "date", "description", "amount", "category". No other text.`
                   }
                 ]
               }
@@ -113,7 +114,8 @@ Return ONLY a valid JSON object with keys: "date", "description", "amount". No o
         setScannedExpense({
           amount: parseFloat(parsedData.amount) || 0,
           description: parsedData.description || "Scanned Bill",
-          date: parsedData.date || new Date().toISOString().split("T")[0]
+          date: parsedData.date || new Date().toISOString().split("T")[0],
+          category: parsedData.category || "Other"
         });
 
         setScanMessage({ type: "success", text: "Receipt scanned successfully! Review below:" });
@@ -232,6 +234,14 @@ Return ONLY a valid JSON object with keys: "date", "description", "amount". No o
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
               <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Date</span>
               <span style={{ fontSize: "13px", color: "var(--text-primary)" }}>{scannedExpense.date}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Category</span>
+              <span style={{ 
+                fontSize: "12px", 
+                color: "var(--color-indigo)",
+                fontWeight: "600"
+              }}>{scannedExpense.category}</span>
             </div>
 
             <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>

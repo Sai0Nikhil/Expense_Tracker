@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Trash2, Search, ArrowUpDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Trash2, Search, ArrowUpDown, ChevronLeft, ChevronRight, Filter, Calendar } from "lucide-react";
+import { CATEGORY_COLORS, CATEGORIES } from "../utils/initialData";
 
 export default function ExpenseList({ expenses, onDeleteExpense }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortField, setSortField] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
   
@@ -27,6 +29,7 @@ export default function ExpenseList({ expenses, onDeleteExpense }) {
   // Reset Filters
   const resetFilters = () => {
     setSearchTerm("");
+    setSelectedCategory("All");
     setStartDate("");
     setEndDate("");
     setCurrentPage(1);
@@ -35,6 +38,7 @@ export default function ExpenseList({ expenses, onDeleteExpense }) {
   // Filter expenses
   const filteredExpenses = expenses.filter((exp) => {
     const matchesSearch = exp.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || exp.category === selectedCategory;
     
     // Date checks
     let matchesStartDate = true;
@@ -46,7 +50,7 @@ export default function ExpenseList({ expenses, onDeleteExpense }) {
       matchesEndDate = new Date(exp.date) <= new Date(endDate);
     }
 
-    return matchesSearch && matchesStartDate && matchesEndDate;
+    return matchesSearch && matchesCategory && matchesStartDate && matchesEndDate;
   });
 
   // Sort expenses
@@ -61,7 +65,7 @@ export default function ExpenseList({ expenses, onDeleteExpense }) {
         ? new Date(aVal) - new Date(bVal)
         : new Date(bVal) - new Date(aVal);
     } else {
-      // String compare (description)
+      // String compare (description/category)
       return sortOrder === "asc"
         ? aVal.localeCompare(bVal)
         : bVal.localeCompare(aVal);
@@ -108,6 +112,22 @@ export default function ExpenseList({ expenses, onDeleteExpense }) {
           />
         </div>
 
+        {/* Category Dropdown */}
+        <div style={{ position: "relative" }}>
+          <Filter size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+          <select
+            className="form-input"
+            style={{ paddingLeft: "36px", appearance: "none" }}
+            value={selectedCategory}
+            onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="All">All Categories</option>
+            {CATEGORIES.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Start Date */}
         <div style={{ position: "relative" }}>
           <Calendar size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
@@ -149,6 +169,9 @@ export default function ExpenseList({ expenses, onDeleteExpense }) {
                 <th style={{ cursor: "pointer" }} onClick={() => handleSort("description")}>
                   Description {sortField === "description" && <ArrowUpDown size={12} style={{ marginLeft: "4px", display: "inline-block" }} />}
                 </th>
+                <th style={{ cursor: "pointer" }} onClick={() => handleSort("category")}>
+                  Category {sortField === "category" && <ArrowUpDown size={12} style={{ marginLeft: "4px", display: "inline-block" }} />}
+                </th>
                 <th style={{ cursor: "pointer", textAlign: "right" }} onClick={() => handleSort("amount")}>
                   Amount {sortField === "amount" && <ArrowUpDown size={12} style={{ marginLeft: "4px", display: "inline-block" }} />}
                 </th>
@@ -159,13 +182,20 @@ export default function ExpenseList({ expenses, onDeleteExpense }) {
               {paginatedExpenses.map((exp) => (
                 <tr key={exp.id}>
                   <td style={{ whiteSpace: "nowrap" }}>
-                    {new Date(exp.date).toLocaleDateString("en-IN", {
+                    {new Date(exp.date).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric"
                     })}
                   </td>
                   <td style={{ fontWeight: "500" }}>{exp.description}</td>
+                  <td>
+                    <span className={`badge bg-gradient-to-r ${CATEGORY_COLORS[exp.category] || "from-slate-400 to-slate-500"}`} style={{ 
+                      background: `linear-gradient(135deg, ${CATEGORY_COLORS[exp.category] ? "var(--color-" + exp.category.toLowerCase() + ")" : "var(--text-muted)"}, rgba(0,0,0,0.3))`
+                    }}>
+                      {exp.category}
+                    </span>
+                  </td>
                   <td style={{ textAlign: "right", fontWeight: "600", color: "var(--text-primary)" }}>
                     ₹{exp.amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>

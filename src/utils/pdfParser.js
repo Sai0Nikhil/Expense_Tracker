@@ -64,21 +64,26 @@ export function parseStatementHeuristic(text) {
   const months = "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|May|June|July|August|September|October|November|December";
   const datePattern3 = new RegExp(`\\b(?:(${months})\\s+(\\d{1,2})|(\\d{1,2})\\s+(${months}))\\b`, "i");
 
-  // Currency pattern
+  // Currency pattern: e.g. 1,200.50, $45.00, -35.20 (excluding numbers without decimal points like years)
+  // We capture the decimal amount
   const amountPattern = /(?:[-$€£\s]|^)(?:\d{1,3}(?:,\d{3})*|\d+)\.\d{2}\b/;
 
   lines.forEach((line, index) => {
+    // Clean multiple spaces
     const cleanLine = line.replace(/\s+/g, " ").trim();
     if (cleanLine.length < 10) return;
 
+    // Look for amount
     const amountMatch = cleanLine.match(amountPattern);
     if (!amountMatch) return;
 
+    // Extract amount float
     const cleanAmountStr = amountMatch[0].replace(/[^\d.-]/g, "");
     let amount = parseFloat(cleanAmountStr);
     if (isNaN(amount)) return;
-    amount = Math.abs(amount);
+    amount = Math.abs(amount); // standard is positive expense values
 
+    // Look for date
     let dateStr = "";
     let dateMatch = cleanLine.match(datePattern2);
     
@@ -87,11 +92,13 @@ export function parseStatementHeuristic(text) {
     } else {
       dateMatch = cleanLine.match(datePattern1);
       if (dateMatch) {
+        // format MM/DD/YYYY or DD/MM/YYYY
         const p1 = dateMatch[1].padStart(2, "0");
         const p2 = dateMatch[2].padStart(2, "0");
         let year = dateMatch[3];
         if (year.length === 2) year = "20" + year;
         
+        // Assume US format (MM/DD/YYYY) by default
         dateStr = `${year}-${p1}-${p2}`;
       } else {
         dateMatch = cleanLine.match(datePattern3);
@@ -114,8 +121,10 @@ export function parseStatementHeuristic(text) {
       }
     }
 
-    if (!dateStr) return;
+    if (!dateStr) return; // Could not resolve date
 
+    // The rest of the line is the description
+    // Strip date and amount from the line to get description
     let description = cleanLine
       .replace(amountMatch[0], "")
       .replace(dateMatch[0], "")
@@ -126,11 +135,32 @@ export function parseStatementHeuristic(text) {
       description = "Statement Transaction";
     }
 
+    // Attempt to guess category based on description
+    let category = "Other";
+    const lowercaseDesc = description.toLowerCase();
+    
+    if (lowercaseDesc.includes("uber") || lowercaseDesc.includes("lyft") || lowercaseDesc.includes("gas") || lowercaseDesc.includes("fuel") || lowercaseDesc.includes("transit") || lowercaseDesc.includes("metro")) {
+      category = "Transport";
+    } else if (lowercaseDesc.includes("grocery") || lowercaseDesc.includes("market") || lowercaseDesc.includes("food") || lowercaseDesc.includes("restaurant") || lowercaseDesc.includes("starbucks") || lowercaseDesc.includes("diner") || lowercaseDesc.includes("cafe") || lowercaseDesc.includes("eats")) {
+      category = "Food";
+    } else if (lowercaseDesc.includes("rent") || lowercaseDesc.includes("mortgage") || lowercaseDesc.includes("landlord")) {
+      category = "Housing";
+    } else if (lowercaseDesc.includes("electric") || lowercaseDesc.includes("water") || lowercaseDesc.includes("sewer") || lowercaseDesc.includes("trash") || lowercaseDesc.includes("internet") || lowercaseDesc.includes("cable") || lowercaseDesc.includes("mobile") || lowercaseDesc.includes("phone")) {
+      category = "Utilities";
+    } else if (lowercaseDesc.includes("netflix") || lowercaseDesc.includes("spotify") || lowercaseDesc.includes("hulu") || lowercaseDesc.includes("cinema") || lowercaseDesc.includes("show") || lowercaseDesc.includes("concert") || lowercaseDesc.includes("ticket") || lowercaseDesc.includes("game")) {
+      category = "Entertainment";
+    } else if (lowercaseDesc.includes("amazon") || lowercaseDesc.includes("nike") || lowercaseDesc.includes("walmart") || lowercaseDesc.includes("target") || lowercaseDesc.includes("clothing") || lowercaseDesc.includes("store") || lowercaseDesc.includes("shop")) {
+      category = "Shopping";
+    } else if (lowercaseDesc.includes("medical") || lowercaseDesc.includes("pharmacy") || lowercaseDesc.includes("hospital") || lowercaseDesc.includes("doctor") || lowercaseDesc.includes("dentist") || lowercaseDesc.includes("therapy") || lowercaseDesc.includes("drug")) {
+      category = "Health";
+    }
+
     parsedExpenses.push({
       id: `pdf-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`,
       amount,
       description,
-      date: dateStr
+      date: dateStr,
+      category
     });
   });
 
